@@ -1,0 +1,140 @@
+library(tidyverse)
+library(sf)
+library(mapsf)
+
+library(terra)
+library(tidyterra)
+
+library(jsonlite)
+library(geojsonio)
+
+
+
+commune_littoral <- st_read("data_entree/communes_littoral.gpkg") %>% 
+  st_transform(st_crs(2154))
+
+
+## filtrer sur les principales communes du littoral
+
+commune_littoral <- commune_littoral %>% 
+  filter(INSEE_COM %in% liste_commune)
+
+
+## Créer la grille hexagonale et joindre spatialement aux communes du littoral
+
+grille_hex <- st_make_grid(x = commune_littoral, 
+                           cellsize = 100, 
+                           square = FALSE) %>% 
+  st_as_sf()
+
+grille_hex <- st_filter(x = grille_hex,
+                        y = commune_littoral,
+                        .predicate = st_intersects)
+
+join_grille_commune <- st_join(x = grille_hex,
+                             y = commune_littoral,
+                             join = st_intersects) %>% 
+                             mutate(geometry = x) %>% 
+                             select(insee_com, nom, geometry) %>% 
+                             st_drop_geometry %>% 
+                             st_as_sf %>% 
+                             st_transform(crs = 4326)
+
+
+## Calculer le niveau d'élévation moyen et la population moyenne par hexbin
+
+alti <- rast("data_entree/France_metropolitaine.tif")
+pop <- rast("data_entree/fra_ppp_2020_constrained.tif")
+grille_sv <- vect(join_grille_commune)
+
+statistiques_zonales_alti <- extract(x = alti,
+                                y = grille_sv,
+                                fun = mean)
+statistiques_zonales_pop <- extract(x = pop,
+                                    y = grille_sv,
+                                    fun = mean,
+                                    na.rm = FALSE)
+
+join_grille_commune$MEAN_ALTI <- statistiques_zonales_alti$MNT_fusion
+join_grille_commune$MEAN_POP <- statistiques_zonales_pop$fra_ppp_2020_constrained
+
+join_grille_commune$MEAN_POP <- replace_na(join_grille_commune$MEAN_POP, 0)
+
+
+## petit coup de propre avant l'export
+
+join_grille_commune$NOM_rect <- tolower(join_grille_commune$NOM)
+join_grille_commune$NOM_rect <- gsub("-","_", join_grille_commune$NOM_rect)
+join_grille_commune$NOM_rect <- gsub("'","_", join_grille_commune$NOM_rect)
+
+
+join_grille_commune <- join_grille_commune %>% 
+  select(INSEE_COM,NOM,NOM_rect,MEAN_ALTI,MEAN_POP,geometry)
+
+
+## export par commune en geoJSON
+
+##liste_nom <- unique(join_grille_commune$NOM_rect)
+
+##for (i in liste_nom){
+##  export_geojson <- join_grille_commune %>% 
+##    filter(NOM_rect == i) %>% 
+##    mutate(PRIM_ID = row_number())
+
+##  st_write(export_geojson,
+##           paste0("sortie/GEOJSON/hexa100_altiMean_popMean_",i,".geojson"),
+##           delete_layer = TRUE)
+  
+##}
+
+
+
+## drop geometry et calculer la fréquence cumulée population en f de altitude
+
+data_pop <- join_grille_commune %>% 
+  st_drop_geometry()
+
+data_pop$MEAN_ALTI_rond <- as.integer(data_pop$MEAN_ALTI)
+
+data_pop <- data_pop %>% 
+  select(MEAN_ALTI_rond, MEAN_POP, INSEE_COM, NOM, NOM_rect) %>% 
+  group_by(MEAN_ALTI_rond, INSEE_COM, NOM, NOM_rect) %>% 
+  summarise(MEAN_POP = sum(MEAN_POP))
+
+
+## calcul freq cum par commune et export en json
+
+##for (i in liste_nom){
+  
+##  export_json <- data_pop %>% 
+##    filter(NOM_rect == i)
+
+##  FREQ_CUM <- export_json$MEAN_POP/sum(export_json$MEAN_POP)
+##  FREQ_CUM <- cumsum(FREQ_CUM)
+##  export_json$FREQ_CUM <- FREQ_CUM 
+  
+##  export_json <- export_json %>%
+##    select(MEAN_ALTI_rond, FREQ_CUM)
+  
+##  writeLines(toJSON(export_json),
+##             paste0("sortie/JSON/hexa100_altiMean_freqPop_",i,".json"))
+  
+##}
+
+
+
+## et pour l'ensemble de la zone
+global_data_pop <- data_pop %>% 
+  select(MEAN_ALTI_rond, MEAN_POP) %>% 
+  group_by(MEAN_ALTI_rond) %>% 
+  summarise(MEAN_POP = sum(MEAN_POP))
+
+global_FREQ_CUM <- global_data_pop$MEAN_POP/sum(global_data_pop$MEAN_POP)
+global_FREQ_CUM <- cumsum(global_FREQ_CUM)
+global_data_pop$FREQ_CUM <- global_FREQ_CUM 
+
+global_data_pop <- global_data_pop %>% 
+  select(MEAN_ALTI_rond, FREQ_CUM)
+
+##writeLines(toJSON(global_data_pop),
+##           "sortie/JSON/hexa100_altiMean_freqPop_global.json")
