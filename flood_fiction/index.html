@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vega@v5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@v5.21.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.19.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <link href="style.css" rel="stylesheet">
+    <title>Test Vega</title>
+</head>
+<body>
+    <header>
+        <h1>Flood Fiction</h1>
+    </header>
+
+    <div class="dashboard">
+        <div id="selection">
+            <label><p>Choisir une ville</p></label>
+            <select>
+                <option v-for="nom in listeVille">{{ nom }}</option>
+            </select>
+        </div>
+
+        <div id="maCarte"></div>
+
+        <div id="app">
+            <div class = "toolbox">
+                <input v-model="selectAlti" type="range" id="meanAlti" name="Altitude"
+                min="1" max="100" placeholder="1" value="1" />
+                <label for="Altitude">Altitude</label>
+                <p>Et pour la région ? Pourcentage de la population concernée</p>
+                <div class = "pct">
+                    <p v-if="selectAlti <= 10" class="tranquille">{{Math.round((data[selectAlti] * 100),1)}} %</p>
+                    <p v-if="selectAlti > 10 && selectAlti <= 30" class="chaud">{{Math.round((data[selectAlti] * 100),1)}} %</p>
+                    <p v-if="selectAlti > 30" class="wesh">{{Math.round((data[selectAlti] * 100),1)}} %</p>
+                </div>
+            </div>
+                <p>Source: WorldPop, IGN</p>
+            <div class="scroll" v-model="selectAlti"  :style="{width: data[selectAlti]*100 + '%'}">
+                <p v-model="selectAlti">{{selectAlti}} m</p>
+            </div>
+        </div> 
+    </div>
+
+    <script src="vue.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
