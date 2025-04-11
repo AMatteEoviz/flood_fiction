@@ -1,38 +1,44 @@
-var spec = {
-
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.21.0.json",
-  "width": 600,
-  "height": 500,
-  "autosize": "fit",
-
-
-  "data": {
-    "url": "http://localhost:8080/geoserver/MoNat/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=MoNat%3Acommunes&outputFormat=application%2Fjson",
-    "format": {"type": "json", "property": "features"}
-  },
-
-  "layer": [
-    {
+document.getElementById().addEventListeners("change", (event) => {
+                                            const value = document.getElementById('inputValue').value;
+                                            const url = `https://github.com/AMatteEoviz/flood_fiction/blob/main/GEOJSON/hexa100_altiMean_popMean_${value}.geojson`;
+  
+  var spec = {
+  
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.21.0.json",
+    "width": 600,
+    "height": 500,
+    "autosize": "fit",
+  
+  
+    "data": {
+      "url": url,
+      "format": {"type": "json", "property": "features"}
+    },
+  
+    "layer": [
+      {
+        "mark":{"type": "geoshape"},
+        encoding: {
+            "fill": {"value": "black"},
+            "stroke": {"value": "black"},
+            "strokeWidth": {"value": 7},
+            "opacity": {"value": 0.2}
+        }
+        },
+  
+      {
       "mark":{"type": "geoshape"},
-      encoding: {
-          "fill": {"value": "black"},
-          "stroke": {"value": "black"},
-          "strokeWidth": {"value": 7},
-          "opacity": {"value": 0.2}
+      "encoding": {
+          "fill": {"value": "#252563"},
+          "stroke": {"value": "white"}
       }
-      },
-
-    {
-    "mark":{"type": "geoshape"},
-    "encoding": {
-        "fill": {"value": "#252563"},
-        "stroke": {"value": "white"}
-    }
-    }
-  ]
-
+      }
+    ]
+  
+  }
+  
+  
+  vegaEmbed('#maCarte', spec).catch(console.error);
 }
-
-vegaEmbed('#map', spec).catch(console.error);
 
 
