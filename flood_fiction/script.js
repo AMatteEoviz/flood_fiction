@@ -1,4 +1,4 @@
-document.getElementById().addEventListeners("change", (event) => {
+document.getElementById("selection").addEventListeners("change", (event) => {
                                             const value = document.getElementById('inputValue').value;
                                             const url = `https://github.com/AMatteEoviz/flood_fiction/blob/main/GEOJSON/hexa100_altiMean_popMean_${value}.geojson`;
   
