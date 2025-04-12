@@ -18,7 +18,7 @@
     <div class="dashboard">
         <div id="selection">
             <label><p>Choisir une ville</p></label>
-            <select id = "select">
+            <select>
                 <option v-for="nom in listeVille">{{ nom }}</option>
             </select>
         </div>
@@ -38,7 +38,7 @@
                 </div>
             </div>
                 <p>Source: WorldPop, IGN</p>
-            <div class="scroll" v-model="selectAlti"  :style="{width: data[selectAlti]*100 + '%'}">
+            <div class="scroll" v-bind="selectAlti"  :style="{width: data[selectAlti]*100 + '%'}">
                 <p v-model="selectAlti">{{selectAlti}} m</p>
             </div>
         </div> 
