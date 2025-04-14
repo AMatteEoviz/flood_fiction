@@ -25,17 +25,14 @@ var spec = {
     {
     "mark":{"type": "geoshape"},
     "encoding": {
-        "fill": {"value": "#252563"},
-        "stroke": {"value": "white"}
+        "fill": {"value": "#252563"}
     }
     },
 
     {
     "mark":{"type": "geoshape"},
     "encoding": {
-        "fill": {"value": "#dedede"},
-        "stroke": {"value": "white"},
-
+        "fill": {"value": "#dedede"}
     },
     "transform": [
       {"filter": {"field": "properties.MEAN_ALTI", "gte": 1}}
